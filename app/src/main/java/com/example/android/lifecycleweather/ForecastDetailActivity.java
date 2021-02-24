@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,23 +14,49 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.example.android.lifecycleweather.data.ForecastCity;
 import com.example.android.lifecycleweather.data.ForecastData;
+import com.example.android.lifecycleweather.utils.OpenWeatherUtils;
+
+import java.util.Calendar;
 
 public class ForecastDetailActivity extends AppCompatActivity {
     public static final String EXTRA_FORECAST_DATA = "ForecastDetailActivity.ForecastData";
     public static final String EXTRA_FORECAST_CITY = "ForecastDetailActivity.ForecastCity";
+    public static final String EXTRA_FORECAST_UNITS = "ForecastDetailActivity.ForecastUnits";
 
     private ForecastData forecastData = null;
     private ForecastCity forecastCity = null;
+    private SharedPreferences sharedPreferences;
+    private String savedUnits;
+    private String units;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+//        unit = sharedPreferences.
+
         setContentView(R.layout.activity_forecast_detail);
 
         Intent intent = getIntent();
+
+        if (intent != null && intent.hasExtra(EXTRA_FORECAST_CITY)) {
+            this.forecastCity = (ForecastCity)intent.getSerializableExtra(EXTRA_FORECAST_CITY);
+            TextView forecastCityTV = findViewById(R.id.tv_forecast_city);
+//            forecastCity = EXTRA
+            forecastCityTV.setText(this.forecastCity.getName());
+        }
+
         if (intent != null && intent.hasExtra(EXTRA_FORECAST_DATA)) {
             this.forecastData = (ForecastData)intent.getSerializableExtra(EXTRA_FORECAST_DATA);
 
+            this.savedUnits = intent.getStringExtra(EXTRA_FORECAST_UNITS);
+            if (savedUnits.equals("Imperial")){
+                this.units = "F";
+            } else if (savedUnits.equals("Metric")){
+                this.units = "C";
+            } else {
+                this.units = "K";
+            }
             /*
              * Load forecast icon into ImageView using Glide: https://bumptech.github.io/glide/
              */
@@ -39,17 +66,21 @@ public class ForecastDetailActivity extends AppCompatActivity {
                     .into(forecastIconIV);
 
             TextView forecastDateTV = findViewById(R.id.tv_forecast_date);
+            Calendar date = OpenWeatherUtils.dateFromEpochAndTZOffset(
+                    forecastData.getEpoch(),
+                    forecastCity.getTimezoneOffsetSeconds()
+            );
             forecastDateTV.setText(getString(
                     R.string.forecast_date_time,
-                    getString(R.string.forecast_date, forecastData.getDate()),
-                    getString(R.string.forecast_time, forecastData.getDate())
+                    getString(R.string.forecast_date, date),
+                    getString(R.string.forecast_time, date)
             ));
 
             TextView lowTempTV = findViewById(R.id.tv_low_temp);
-            lowTempTV.setText(getString(R.string.forecast_temp, forecastData.getLowTemp(), "F"));
+            lowTempTV.setText(getString(R.string.forecast_temp, forecastData.getLowTemp(), this.units));
 
             TextView highTempTV = findViewById(R.id.tv_high_temp);
-            highTempTV.setText(getString(R.string.forecast_temp, forecastData.getHighTemp(), "F"));
+            highTempTV.setText(getString(R.string.forecast_temp, forecastData.getHighTemp(), this.units));
 
             TextView popTV = findViewById(R.id.tv_pop);
             popTV.setText(getString(R.string.forecast_pop, forecastData.getPop()));
@@ -65,12 +96,6 @@ public class ForecastDetailActivity extends AppCompatActivity {
 
             TextView forecastDescriptionTV = findViewById(R.id.tv_forecast_description);
             forecastDescriptionTV.setText(forecastData.getShortDescription());
-        }
-
-        if (intent != null && intent.hasExtra(EXTRA_FORECAST_CITY)) {
-            this.forecastCity = (ForecastCity)intent.getSerializableExtra(EXTRA_FORECAST_CITY);
-            TextView forecastCityTV = findViewById(R.id.tv_forecast_city);
-            forecastCityTV.setText(this.forecastCity.getName());
         }
     }
 
@@ -97,18 +122,22 @@ public class ForecastDetailActivity extends AppCompatActivity {
      */
     private void shareForecastText() {
         if (this.forecastData != null && this.forecastCity != null) {
+            Calendar date = OpenWeatherUtils.dateFromEpochAndTZOffset(
+                    forecastData.getEpoch(),
+                    forecastCity.getTimezoneOffsetSeconds()
+            );
             String shareText = getString(
                     R.string.share_forecast_text,
                     getString(R.string.app_name),
                     this.forecastCity.getName(),
                     getString(
                             R.string.forecast_date_time,
-                            getString(R.string.forecast_date, forecastData.getDate()),
-                            getString(R.string.forecast_time, forecastData.getDate())
+                            getString(R.string.forecast_date, date),
+                            getString(R.string.forecast_time, date)
                     ),
                     this.forecastData.getShortDescription(),
-                    getString(R.string.forecast_temp, this.forecastData.getHighTemp(), "F"),
-                    getString(R.string.forecast_temp, this.forecastData.getLowTemp(), "F"),
+                    getString(R.string.forecast_temp, this.forecastData.getHighTemp(), this.units),
+                    getString(R.string.forecast_temp, this.forecastData.getLowTemp(), this.units),
                     getString(R.string.forecast_pop, this.forecastData.getPop())
             );
 

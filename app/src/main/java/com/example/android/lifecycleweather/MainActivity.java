@@ -3,11 +3,15 @@ package com.example.android.lifecycleweather;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,9 +31,10 @@ import com.android.volley.toolbox.Volley;
 import com.example.android.lifecycleweather.data.FiveDayForecast;
 import com.example.android.lifecycleweather.data.ForecastCity;
 import com.example.android.lifecycleweather.data.ForecastData;
+import com.example.android.lifecycleweather.data.LoadingStatus;
 import com.example.android.lifecycleweather.utils.OpenWeatherUtils;
 
-public class MainActivity extends AppCompatActivity implements ForecastAdapter.OnForecastItemClickListener {
+public class MainActivity extends AppCompatActivity implements ForecastAdapter.OnForecastItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     /*
@@ -47,11 +52,17 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
      *
      *   https://docs.gradle.org/current/userguide/build_environment.html#sec:gradle_configuration_properties
      *
-     * Alternatively, you can just hard-code your API key below 🤷‍.
+     * Alternatively, you can just hard-code your API key below 🤷‍.  If you do hard code your API
+     * key below, make sure to get rid of the following line (line 18) in build.gradle:
+     *
+     *   buildConfigField("String", "OPENWEATHER_API_KEY", OPENWEATHER_API_KEY)
      */
     private static final String OPENWEATHER_APPID = BuildConfig.OPENWEATHER_API_KEY;
-
+    private static final String FORECAST_RESULTS_KEY = "MainActivity.forecastResults";
     private ForecastAdapter forecastAdapter;
+    private ForecastViewModel forecastViewModel;
+    private SharedPreferences sharedPreferences;
+
     private RequestQueue requestQueue;
 
     private ForecastCity forecastCity;
@@ -62,8 +73,15 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
 
     private Toast errorToast;
 
+    private FiveDayForecast forecast;
+
+    private String savedUnits;
+    private String savedQuery;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -77,13 +95,75 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
         this.forecastListRV.setAdapter(this.forecastAdapter);
 
         this.requestQueue = Volley.newRequestQueue(this);
-        this.fetchFiveDayForecast("Corvallis,OR,US", "imperial");
+
+        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        this.sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        savedUnits = sharedPreferences.getString("pref_units", "Metric");
+        savedQuery = sharedPreferences.getString("pref_city", "Corvallis");
+
+        this.forecastViewModel = new ViewModelProvider(this)
+                .get(ForecastViewModel.class);
+
+        this.forecastViewModel.getForecastResults().observe(this,
+                new Observer<FiveDayForecast>() {
+                    @Override
+                    public void onChanged(FiveDayForecast fiveDayForecast) {
+                        if (fiveDayForecast != null) {
+                            String units;
+                            if (savedUnits.equals("Imperial")){
+                                units = "F";
+                            } else if (savedUnits.equals("Metric")){
+                                units = "C";
+                            } else {
+                                units = "K";
+                            }
+                            forecastCity = fiveDayForecast.getForecastCity();
+                            forecastAdapter.updateForecastData(fiveDayForecast, units);
+                        }
+//                        forecastCity = forecast.getForecastCity();
+                    }
+                });
+        this.forecastViewModel.getLoadingStatus().observe(this, new Observer<LoadingStatus>() {
+            @Override
+            public void onChanged(LoadingStatus loadingStatus) {
+                if (loadingStatus == LoadingStatus.LOADING){
+                    loadingIndicatorPB.setVisibility(View.VISIBLE);
+                } else if (loadingStatus == LoadingStatus.SUCCESS){
+                    loadingIndicatorPB.setVisibility(View.INVISIBLE);
+                    forecastListRV.setVisibility(View.VISIBLE);
+                    errorMessageTV.setVisibility(View.INVISIBLE);
+                    ActionBar actionBar = getSupportActionBar();
+                    actionBar.setTitle(forecastCity.getName());
+                } else {
+                    loadingIndicatorPB.setVisibility(View.INVISIBLE);
+                    forecastListRV.setVisibility(View.INVISIBLE);
+                    errorMessageTV.setVisibility(View.VISIBLE);
+
+                }
+
+    //
+    //                    ActionBar actionBar = getSupportActionBar();
+    //                    actionBar.setTitle(forecastCity.getName());
+            }
+        });
+//        this.fetchFiveDayForecast("Corvallis,OR,US", "imperial");
+        forecastViewModel.loadForecastResults(this.savedQuery, this.savedUnits);
+//        if (savedInstanceState != null && savedInstanceState.containsKey(FORECAST_RESULTS_KEY)){
+//            this.forecast = (FiveDayForecast) savedInstanceState.getSerializable(FORECAST_RESULTS_KEY);
+//            this.forecastAdapter.updateForecastData(this.forecast);
+//        }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.d(TAG, "shared preference changed, key: " + key + ", value: " + sharedPreferences.getString(key, ""));
     }
 
     @Override
     public void onForecastItemClick(ForecastData forecastData) {
         Intent intent = new Intent(this, ForecastDetailActivity.class);
         intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_DATA, forecastData);
+        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_UNITS, this.savedUnits);
         intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_CITY, this.forecastCity);
         startActivity(intent);
     }
@@ -97,6 +177,10 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_settings:
+                Intent intent = new Intent(this,SettingsActivity.class);
+                startActivity(intent);
+                return true;
             case R.id.action_map:
                 viewForecastCityInMap();
                 return true;
@@ -116,47 +200,93 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
      * @param units String specifying the type of units of measurement to fetch.  Can be
      *              "imperial", "metric", or "standard".
      */
-    private void fetchFiveDayForecast(String city, String units) {
-        String forecastUrl = OpenWeatherUtils.buildFiveDayForecastUrl(city, units, OPENWEATHER_APPID);
-        Log.d(TAG, "Request URL: " + forecastUrl);
+//    private void fetchFiveDayForecast(String city, String units) {
+//        String forecastUrl = OpenWeatherUtils.buildFiveDayForecastUrl(city, units, OPENWEATHER_APPID);
+//        Log.d(TAG, "Request URL: " + forecastUrl);
+//
+//        StringRequest req = new StringRequest(
+//                Request.Method.GET,
+//                forecastUrl,
+//                new Response.Listener<String>() {
+//                    @Override
+//                    public void onResponse(String response) {
+//                        forecast =
+//                                OpenWeatherUtils.parseFiveDayForecastResponse(response);
+//                        forecastAdapter.updateForecastData(forecast);
+//                        forecastCity = forecast.getForecastCity();
+//
+//                        forecastListRV.setVisibility(View.VISIBLE);
+//                        loadingIndicatorPB.setVisibility(View.INVISIBLE);
+//                        errorMessageTV.setVisibility(View.INVISIBLE);
+//
+//                        ActionBar actionBar = getSupportActionBar();
+//                        actionBar.setTitle(forecastCity.getName());
+//                    }
+//                },
+//                new Response.ErrorListener() {
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//                        error.printStackTrace();
+//                        errorMessageTV.setText(getString(R.string.loading_error, error.getMessage()));
+//                        errorMessageTV.setVisibility(View.VISIBLE);
+//                        loadingIndicatorPB.setVisibility(View.INVISIBLE);
+//                        forecastListRV.setVisibility(View.INVISIBLE);
+//                    }
+//                }
+//        );
+//        loadingIndicatorPB.setVisibility(View.VISIBLE);
+//        this.requestQueue.add(req);
+//    }
 
-        StringRequest req = new StringRequest(
-                Request.Method.GET,
-                forecastUrl,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        FiveDayForecast forecast =
-                                OpenWeatherUtils.parseFiveDayForecastResponse(response);
-                        forecastAdapter.updateForecastData(forecast.getForecastDataList());
-                        forecastCity = forecast.getForecastCity();
+    @Override
+    protected void onStart() {
+        Log.d(TAG, "onStart");
+        super.onStart();
+    }
 
-                        forecastListRV.setVisibility(View.VISIBLE);
-                        loadingIndicatorPB.setVisibility(View.INVISIBLE);
-                        errorMessageTV.setVisibility(View.INVISIBLE);
+//    @Override
+//    protected void onSaveInstanceState(@NonNull Bundle outState) {
+//        Log.d(TAG, "onSaveInstance");
+//        if (this.forecast != null){
+//            outState.putSerializable(FORECAST_RESULTS_KEY, this.forecast);
+//        }
+//        super.onSaveInstanceState(outState);
+//    }
 
-                        ActionBar actionBar = getSupportActionBar();
-                        actionBar.setTitle(forecastCity.getName());
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        error.printStackTrace();
-                        errorMessageTV.setText(getString(R.string.loading_error, error.getMessage()));
-                        errorMessageTV.setVisibility(View.VISIBLE);
-                        loadingIndicatorPB.setVisibility(View.INVISIBLE);
-                        forecastListRV.setVisibility(View.INVISIBLE);
-                    }
-                }
-        );
-        loadingIndicatorPB.setVisibility(View.VISIBLE);
-        this.requestQueue.add(req);
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "onResume");
+        savedUnits = sharedPreferences.getString("pref_units", "Metric");
+        savedQuery = sharedPreferences.getString("pref_city", "Corvallis,OR,US");
+        forecastViewModel.loadForecastResults(this.savedQuery, this.savedUnits);
+
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "onPause");
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(TAG, "onStop");
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        this.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        Log.d(TAG, "onDestroy");
+
+        super.onDestroy();
     }
 
     /**
      * This function uses an implicit intent to view the forecast city in a map.
      */
+
     private void viewForecastCityInMap() {
         if (this.forecastCity != null) {
             Uri forecastCityGeoUri = Uri.parse(getString(
