@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
      *
      *   buildConfigField("String", "OPENWEATHER_API_KEY", OPENWEATHER_API_KEY)
      */
-    private static final String OPENWEATHER_APPID = BuildConfig.OPENWEATHER_API_KEY;
+    private static final String OPENWEATHER_APPID = "jqfTKLy7wfm6ANMOWLx4Gt0bFhQDZ28n9rqHfJxz";
     private static final String FORECAST_RESULTS_KEY = "MainActivity.forecastResults";
     private ForecastAdapter forecastAdapter;
     private ForecastViewModel forecastViewModel;
@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
 
     private String savedUnits;
     private String savedQuery;
+//    private String date = "2020-01-01";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,8 +118,10 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
                             } else {
                                 units = "K";
                             }
-                            forecastCity = fiveDayForecast.getForecastCity();
-                            forecastAdapter.updateForecastData(fiveDayForecast, units);
+//                            forecastCity = fiveDayForecast.getForecastCity();
+                            if(fiveDayForecast != null) {
+                                forecastAdapter.updateForecastData(fiveDayForecast, units);
+                            }
                         }
 //                        forecastCity = forecast.getForecastCity();
                     }
@@ -133,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
                     forecastListRV.setVisibility(View.VISIBLE);
                     errorMessageTV.setVisibility(View.INVISIBLE);
                     ActionBar actionBar = getSupportActionBar();
-                    actionBar.setTitle(forecastCity.getName());
+//                    actionBar.setTitle(forecastCity.getName());
                 } else {
                     loadingIndicatorPB.setVisibility(View.INVISIBLE);
                     forecastListRV.setVisibility(View.INVISIBLE);
@@ -146,9 +149,36 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
     //                    actionBar.setTitle(forecastCity.getName());
             }
         });
+
+        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True");
+
 //        this.fetchFiveDayForecast("Corvallis,OR,US", "imperial");
-        forecastViewModel.loadForecastResults(this.savedQuery, this.savedUnits);
-//        if (savedInstanceState != null && savedInstanceState.containsKey(FORECAST_RESULTS_KEY)){
+
+//        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True");
+//        this.forecastViewModel.getForecastResults().observe(this,
+//                new Observer<FiveDayForecast>() {
+//                    @Override
+//                    public void onChanged(FiveDayForecast fiveDayForecast) {
+//                        if (fiveDayForecast != null) {
+//                            String units;
+//                            if (savedUnits.equals("Imperial")){
+//                                units = "F";
+//                            } else if (savedUnits.equals("Metric")){
+//                                units = "C";
+//                            } else {
+//                                units = "K";
+//                            }
+////                            forecastViewModel.getForecastResults();
+//                            Log.d(TAG, "adding one picture");
+//                            if(fiveDayForecast!=null) {
+//                                forecastAdapter.updateForecastData(fiveDayForecast, units);
+//                            }
+//                        }
+////                        forecastCity = forecast.getForecastCity();
+//                    }
+//                });
+
+        //        if (savedInstanceState != null && savedInstanceState.containsKey(FORECAST_RESULTS_KEY)){
 //            this.forecast = (FiveDayForecast) savedInstanceState.getSerializable(FORECAST_RESULTS_KEY);
 //            this.forecastAdapter.updateForecastData(this.forecast);
 //        }
@@ -160,12 +190,13 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
     }
 
     @Override
-    public void onForecastItemClick(ForecastData forecastData) {
-        Intent intent = new Intent(this, ForecastDetailActivity.class);
-        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_DATA, forecastData);
-        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_UNITS, this.savedUnits);
-        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_CITY, this.forecastCity);
-        startActivity(intent);
+    public void onForecastItemClick(FiveDayForecast fiveDayForecast) {
+//        Intent intent = new Intent(this, ForecastDetailActivity.class);
+//        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_DATA, forecastData);
+//        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_UNITS, this.savedUnits);
+//        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_CITY, this.forecastCity);
+//        startActivity(intent);
+        Log.d(TAG, "clicked on tag");
     }
 
     @Override
@@ -181,9 +212,9 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
                 Intent intent = new Intent(this,SettingsActivity.class);
                 startActivity(intent);
                 return true;
-            case R.id.action_map:
-                viewForecastCityInMap();
-                return true;
+//            case R.id.action_map:
+//                viewForecastCityInMap();
+//                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -258,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
         Log.d(TAG, "onResume");
         savedUnits = sharedPreferences.getString("pref_units", "Metric");
         savedQuery = sharedPreferences.getString("pref_city", "Corvallis,OR,US");
-        forecastViewModel.loadForecastResults(this.savedQuery, this.savedUnits);
+//        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True");
 
         super.onResume();
     }
@@ -286,29 +317,29 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
     /**
      * This function uses an implicit intent to view the forecast city in a map.
      */
-
-    private void viewForecastCityInMap() {
-        if (this.forecastCity != null) {
-            Uri forecastCityGeoUri = Uri.parse(getString(
-                    R.string.geo_uri,
-                    this.forecastCity.getLatitude(),
-                    this.forecastCity.getLongitude(),
-                    12
-            ));
-            Intent intent = new Intent(Intent.ACTION_VIEW, forecastCityGeoUri);
-            try {
-                startActivity(intent);
-            } catch (ActivityNotFoundException e) {
-                if (this.errorToast != null) {
-                    this.errorToast.cancel();
-                }
-                this.errorToast = Toast.makeText(
-                        this,
-                        getString(R.string.action_map_error),
-                        Toast.LENGTH_LONG
-                );
-                this.errorToast.show();
-            }
-        }
-    }
+//
+//    private void viewForecastCityInMap() {
+//        if (this.forecastCity != null) {
+//            Uri forecastCityGeoUri = Uri.parse(getString(
+//                    R.string.geo_uri,
+//                    this.forecastCity.getLatitude(),
+//                    this.forecastCity.getLongitude(),
+//                    12
+//            ));
+//            Intent intent = new Intent(Intent.ACTION_VIEW, forecastCityGeoUri);
+//            try {
+//                startActivity(intent);
+//            } catch (ActivityNotFoundException e) {
+//                if (this.errorToast != null) {
+//                    this.errorToast.cancel();
+//                }
+//                this.errorToast = Toast.makeText(
+//                        this,
+//                        getString(R.string.action_map_error),
+//                        Toast.LENGTH_LONG
+//                );
+//                this.errorToast.show();
+//            }
+//        }
+//    }
 }

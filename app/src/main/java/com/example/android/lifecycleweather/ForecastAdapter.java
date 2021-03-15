@@ -1,6 +1,8 @@
 package com.example.android.lifecycleweather;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,18 +14,22 @@ import com.example.android.lifecycleweather.data.FiveDayForecast;
 import com.example.android.lifecycleweather.data.ForecastData;
 import com.example.android.lifecycleweather.utils.OpenWeatherUtils;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ForecastItemViewHolder> {
-    private FiveDayForecast fiveDayForecast;
+    private ArrayList<FiveDayForecast> fiveDayForecast = new ArrayList<FiveDayForecast>();
     private OnForecastItemClickListener onForecastItemClickListener;
     private String units;
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     public interface OnForecastItemClickListener {
-        void onForecastItemClick(ForecastData forecastData);
+        void onForecastItemClick(FiveDayForecast fiveDayForecast);
     }
 
     public ForecastAdapter(OnForecastItemClickListener onForecastItemClickListener) {
@@ -40,69 +46,81 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
 
     @Override
     public void onBindViewHolder(@NonNull ForecastItemViewHolder holder, int position) {
-        holder.bind(this.fiveDayForecast.getForecastDataList().get(position), this.units);
+        holder.bind(this.fiveDayForecast.get(position), this.units);
     }
 
     public void updateForecastData(FiveDayForecast fiveDayForecast, String units) {
-        this.fiveDayForecast = fiveDayForecast;
-        this.units = units;
-        notifyDataSetChanged();
+        if (this.fiveDayForecast!=null) {
+            this.fiveDayForecast.add(fiveDayForecast);
+            this.units = units;
+            notifyDataSetChanged();
+        }
     }
 
     @Override
     public int getItemCount() {
-        if (this.fiveDayForecast == null || this.fiveDayForecast.getForecastDataList() == null) {
+        if (this.fiveDayForecast == null) {
             return 0;
         } else {
-            return this.fiveDayForecast.getForecastDataList().size();
+            return this.fiveDayForecast.size();
         }
     }
 
+    public static Drawable LoadImageFromWebOperations(String url) {
+        try {
+            InputStream is = (InputStream) new URL(url).getContent();
+            Drawable d = Drawable.createFromStream(is, "src name");
+            return d;
+        } catch (Exception e) {
+            return null;
+        }
+    }
     class ForecastItemViewHolder extends RecyclerView.ViewHolder {
-        final private TextView dateTV;
-        final private TextView timeTV;
-        final private TextView highTempTV;
-        final private TextView lowTempTV;
-        final private TextView popTV;
-        final private ImageView iconIV;
+//        final private TextView dateTV;
+//        final private TextView timeTV;
+//        final private TextView highTempTV;
+//        final private TextView lowTempTV;
+//        final private TextView popTV;
+        final private ImageView thumbnailTV;
 
         public ForecastItemViewHolder(@NonNull View itemView) {
             super(itemView);
-            dateTV = itemView.findViewById(R.id.tv_date);
-            timeTV = itemView.findViewById(R.id.tv_time);
-            highTempTV = itemView.findViewById(R.id.tv_high_temp);
-            lowTempTV = itemView.findViewById(R.id.tv_low_temp);
-            popTV = itemView.findViewById(R.id.tv_pop);
-            iconIV = itemView.findViewById(R.id.iv_forecast_icon);
+//            dateTV = itemView.findViewById(R.id.tv_date);
+//            timeTV = itemView.findViewById(R.id.tv_time);
+//            highTempTV = itemView.findViewById(R.id.tv_high_temp);
+//            lowTempTV = itemView.findViewById(R.id.tv_low_temp);
+//            popTV = itemView.findViewById(R.id.tv_pop);
+            thumbnailTV = itemView.findViewById(R.id.thumbnail);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     onForecastItemClickListener.onForecastItemClick(
-                            fiveDayForecast.getForecastDataList().get(getAdapterPosition())
+                            fiveDayForecast.get(getAdapterPosition())
+
                     );
+                    Log.d(TAG, "Adapter position: " + getAdapterPosition());
                 }
             });
         }
 
-        public void bind(ForecastData forecastData, String units) {
+        public void bind(FiveDayForecast fiveDayForecast, String units) {
             Context ctx = this.itemView.getContext();
-            Calendar date = OpenWeatherUtils.dateFromEpochAndTZOffset(
-                    forecastData.getEpoch(),
-                    fiveDayForecast.getForecastCity().getTimezoneOffsetSeconds()
-            );
-            dateTV.setText(ctx.getString(R.string.forecast_date, date));
-            timeTV.setText(ctx.getString(R.string.forecast_time, date));
-            highTempTV.setText(ctx.getString(R.string.forecast_temp, forecastData.getHighTemp(), units));
-            lowTempTV.setText(ctx.getString(R.string.forecast_temp, forecastData.getLowTemp(), units));
-            popTV.setText(ctx.getString(R.string.forecast_pop, forecastData.getPop()));
-
+//            Calendar date = OpenWeatherUtils.dateFromEpochAndTZOffset(
+//                    forecastData.getEpoch(),
+//                    fiveDayForecast.getForecastCity().getTimezoneOffsetSeconds()
+//            );
+//            dateTV.setText(ctx.getString(R.string.forecast_date, date));
+//            timeTV.setText(ctx.getString(R.string.forecast_time, date));
+//            highTempTV.setText(ctx.getString(R.string.forecast_temp, forecastData.getHighTemp(), units));
+//            lowTempTV.setText(ctx.getString(R.string.forecast_temp, forecastData.getLowTemp(), units));
+//            popTV.setText(ctx.getString(R.string.forecast_pop, forecastData.getPop()));
             /*
              * Load forecast icon into ImageView using Glide: https://bumptech.github.io/glide/
              */
             Glide.with(ctx)
-                    .load(forecastData.getIconUrl())
-                    .into(iconIV);
+                    .load(fiveDayForecast.getThumbnailUrl())
+                    .into(thumbnailTV);
         }
 
     }

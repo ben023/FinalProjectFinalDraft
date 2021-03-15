@@ -26,7 +26,7 @@ public class ForecastViewModel extends ViewModel {
         return this.loadingStatus;
     }
 
-    public void loadForecastResults(String query, String units){
-        this.repository.loadForecastResults(query, units);
+    public void loadForecastResults(String OPENWEATHER_APPID, String thumbs){
+        this.repository.loadForecastResults(OPENWEATHER_APPID, thumbs);
     }
 }

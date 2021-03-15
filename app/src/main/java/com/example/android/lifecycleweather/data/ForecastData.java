@@ -22,6 +22,8 @@ public class ForecastData implements Serializable {
     private String shortDescription;
     private String iconUrl;
 
+    private String url = "https://api.nasa.gov/planetary/apod?api_key=jqfTKLy7wfm6ANMOWLx4Gt0bFhQDZ28n9rqHfJxz";
+
     public ForecastData() {
         this.epoch = 0;
         this.highTemp = 0;
@@ -60,6 +62,8 @@ public class ForecastData implements Serializable {
         return lowTemp;
     }
 
+    public String getUrl(){return url;
+    }
     public int getPop() {
         return pop;
     }
