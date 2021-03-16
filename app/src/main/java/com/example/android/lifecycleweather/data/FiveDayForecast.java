@@ -17,7 +17,7 @@ public class FiveDayForecast implements Serializable, Comparable<FiveDayForecast
     private String thumbnailUrl;
 
 //    @SerializedName("url")
-//    private String url;
+    private String url;
 
     private Double timeStamp;
 
@@ -32,18 +32,19 @@ public class FiveDayForecast implements Serializable, Comparable<FiveDayForecast
 //        this.timeStamp = timestamp;
 //    }
 
-    public FiveDayForecast(Double timestamp, String thumbnailUrl) {
+    public FiveDayForecast(Double timestamp, String url, String thumbnailUrl) {
 //        Log.d("forecast", "this is thumbnail" + thumbnailUrl);
 //        Log.d("forecast", "this is url"+url);
         this.thumbnailUrl = thumbnailUrl;
         this.timeStamp = timestamp;
+        this.url = url;
     }
 
     public void setTimestamp(Double timestamp){
         this.timeStamp=timestamp;
     }
 
-
+    public String getUrl(){return this.url;}
     public String getThumbnailUrl() {
         return this.thumbnailUrl;
     }
@@ -65,7 +66,7 @@ public class FiveDayForecast implements Serializable, Comparable<FiveDayForecast
             JsonObject cityObj = json.getAsJsonObject();
 //            JsonObject coordObj = cityObj.getAsJsonObject("coord");
             return new FiveDayForecast(0.0,
-                    cityObj.getAsJsonPrimitive("thumb_url").getAsString()
+                    cityObj.getAsJsonPrimitive("thumb_url").getAsString(), null
 //                    cityObj.getAsJsonPrimitive("thumb_url").getAsString()
 //                    coordObj.getAsJsonPrimitive("lon").getAsDouble(),
 //                    cityObj.getAsJsonPrimitive("timezone").getAsInt()

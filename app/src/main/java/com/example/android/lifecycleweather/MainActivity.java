@@ -99,8 +99,8 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
 
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         this.sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        savedUnits = sharedPreferences.getString("pref_units", "Metric");
-        savedQuery = sharedPreferences.getString("pref_city", "Corvallis");
+//        savedUnits = sharedPreferences.getString("pref_units", "Metric");
+        savedQuery = sharedPreferences.getString("pref_city", "today");
 
         this.forecastViewModel = new ViewModelProvider(this)
                 .get(ForecastViewModel.class);
@@ -110,14 +110,14 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
                     @Override
                     public void onChanged(FiveDayForecast fiveDayForecast) {
                         if (fiveDayForecast != null) {
-                            String units;
-                            if (savedUnits.equals("Imperial")){
-                                units = "F";
-                            } else if (savedUnits.equals("Metric")){
-                                units = "C";
-                            } else {
-                                units = "K";
-                            }
+                            String units="F";
+//                            if (savedUnits.equals("Imperial")){
+//                                units = "F";
+//                            } else if (savedUnits.equals("Metric")){
+//                                units = "C";
+//                            } else {
+//                                units = "K";
+//                            }
 //                            forecastCity = fiveDayForecast.getForecastCity();
                             if(fiveDayForecast != null) {
                                 forecastAdapter.updateForecastData(fiveDayForecast, units);
@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
             }
         });
 
-        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True", "2020-10-10");
+        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True", this.sharedPreferences.getString("pref_city", "2020-10-10"));
 
 //        this.fetchFiveDayForecast("Corvallis,OR,US", "imperial");
 
@@ -187,6 +187,8 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Log.d(TAG, "shared preference changed, key: " + key + ", value: " + sharedPreferences.getString(key, ""));
+        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True", this.sharedPreferences.getString("pref_city", "2020-10-10"));
+
     }
 
     @Override

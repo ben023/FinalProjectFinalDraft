@@ -96,6 +96,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
 //            popTV = itemView.findViewById(R.id.tv_pop);
             thumbnailTV = itemView.findViewById(R.id.thumbnail);
 
+
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -122,9 +123,17 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
             /*
              * Load forecast icon into ImageView using Glide: https://bumptech.github.io/glide/
              */
-            Glide.with(ctx)
-                    .load(fiveDayForecast.getThumbnailUrl())
-                    .into(thumbnailTV);
+            if(fiveDayForecast.getThumbnailUrl() != null){
+                Glide.with(ctx)
+                        .load(fiveDayForecast.getThumbnailUrl())
+                        .into(thumbnailTV);
+            }
+            else{
+                Glide.with(ctx)
+                        .load(fiveDayForecast.getUrl())
+                        .into(thumbnailTV);
+            }
+
         }
 
     }
