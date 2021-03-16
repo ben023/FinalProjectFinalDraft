@@ -39,6 +39,8 @@ public class ForecastRepository {
     public ForecastRepository() {
         this.forecastResults = new MutableLiveData<>();
         this.forecastResults.setValue(null);
+        this.urlForecastResults = new MutableLiveData<>();
+        this.urlForecastResults.setValue(null);
 //        this.currentQuery = null;
         this.loadingStatus = new MutableLiveData<>();
         this.loadingStatus.setValue(LoadingStatus.SUCCESS);
@@ -87,9 +89,9 @@ public class ForecastRepository {
 //                            forecastDataList.add(data_item);
 //                        }
 
-//                        FiveDayForecast fiveDayForecast = new FiveDayForecast(response.body().getTimeStamp(),response.body().getThumbnailUrl());
+                        FiveDayForecast fiveDayForecast = new FiveDayForecast((double) System.currentTimeMillis(),null, response.body().getThumbnailUrl());
 //                        forecastResults.addUrl(response)
-                        forecastResults.setValue(response.body());
+                        forecastResults.setValue(fiveDayForecast);
 //                    forecastResults.setValue(response.body().getForecastDataList());
 //                        forecastResults.setValue(fiveDayForecast);
                         loadingStatus.setValue(LoadingStatus.SUCCESS);
@@ -101,13 +103,17 @@ public class ForecastRepository {
 
                 @Override
                 public void onFailure(Call<FiveDayForecast> call, Throwable t) {
+                    Log.d("forecast", "using just url now");
                     Call<UrlFiveDayForecast> urlFiveDayForecastResults = urlForecastService.getUrlForecast(OPENWEATHER_APPID, thumbs, date);
                     urlFiveDayForecastResults.enqueue(new Callback<UrlFiveDayForecast>() {
                         @Override
                         public void onResponse(Call<UrlFiveDayForecast> call, Response<UrlFiveDayForecast> response) {
                             if(response.code() == 200){
+//                                Log.d("forecast", String.valueOf(response.body()));
+                                String url = response.body().getUrl();
+                                FiveDayForecast fiveDayForecast = new FiveDayForecast((double) System.currentTimeMillis(), url, null);
+                                forecastResults.setValue(fiveDayForecast);
 
-                                urlForecastResults.setValue(response.body());
                                 loadingStatus.setValue(LoadingStatus.SUCCESS);
                             }
                         }
