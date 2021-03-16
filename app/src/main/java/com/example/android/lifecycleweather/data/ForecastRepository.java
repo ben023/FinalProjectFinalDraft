@@ -23,6 +23,7 @@ public class ForecastRepository {
 
     private MutableLiveData<FiveDayForecast> forecastResults;
     private MutableLiveData<LoadingStatus> loadingStatus;
+    private MutableLiveData<UrlFiveDayForecast> urlForecastResults;
 
     private String currentDate;
     private String currentUnits;
@@ -30,6 +31,7 @@ public class ForecastRepository {
     private static final String TAG = ForecastRepository.class.getSimpleName();
 
     private ForecastService forecastService;
+    private UrlForecastService urlForecastService;
 
     private static final String BASE_URL = "https://api.nasa.gov";
     public Gson gson;
@@ -51,6 +53,7 @@ public class ForecastRepository {
                 .build();
 
         this.forecastService = retrofit.create(ForecastService.class);
+        this.urlForecastService = retrofit.create(UrlForecastService.class);
     }
 
     public LiveData<FiveDayForecast> getForecastResults(){
@@ -62,16 +65,18 @@ public class ForecastRepository {
         return this.loadingStatus;
     }
 
-    public void loadForecastResults(String OPENWEATHER_APPID, String thumbs) {
+    public void loadForecastResults(String OPENWEATHER_APPID, String thumbs, String date) {
 //        if (shouldExecuteForecast(date)) {
             Log.d(TAG, "getting new results for this date: ");
 //            this.currentDate = date;
 //            this.currentUnits = units;
             this.forecastResults.setValue(null);
+            this.urlForecastResults.setValue(null);
             this.loadingStatus.setValue(LoadingStatus.LOADING);
 //            Log.d(TAG, "running new forecast search for this query" + query + " and units " + units);
-            Call<FiveDayForecast> fiveDayForecastResults = this.forecastService.getForecast(OPENWEATHER_APPID, thumbs);
-            fiveDayForecastResults.enqueue(new Callback<FiveDayForecast>() {
+            Call<FiveDayForecast> thumbFiveDayForecastResults = this.forecastService.getForecast(OPENWEATHER_APPID, thumbs, date);
+        Log.d(TAG, "this is date"+date);
+            thumbFiveDayForecastResults.enqueue(new Callback<FiveDayForecast>() {
                 @Override
                 public void onResponse(Call<FiveDayForecast> call, Response<FiveDayForecast> response) {
                     if (response.code() == 200){
@@ -96,9 +101,26 @@ public class ForecastRepository {
 
                 @Override
                 public void onFailure(Call<FiveDayForecast> call, Throwable t) {
-                    Log.d(TAG, "Response code failed");
-                    loadingStatus.setValue(LoadingStatus.ERROR);
-                    t.printStackTrace();
+                    Call<UrlFiveDayForecast> urlFiveDayForecastResults = urlForecastService.getUrlForecast(OPENWEATHER_APPID, thumbs, date);
+                    urlFiveDayForecastResults.enqueue(new Callback<UrlFiveDayForecast>() {
+                        @Override
+                        public void onResponse(Call<UrlFiveDayForecast> call, Response<UrlFiveDayForecast> response) {
+                            if(response.code() == 200){
+
+                                urlForecastResults.setValue(response.body());
+                                loadingStatus.setValue(LoadingStatus.SUCCESS);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<UrlFiveDayForecast> call, Throwable t) {
+                            Log.d("forecast", "failed");
+                        }
+                    });
+
+//                    Log.d(TAG, "Response code failed");
+//                    loadingStatus.setValue(LoadingStatus.ERROR);
+//                    t.printStackTrace();
                 }
             });
 //        } else {

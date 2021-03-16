@@ -1,5 +1,7 @@
 package com.example.android.lifecycleweather.data;
 
+import android.util.Log;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -10,9 +12,12 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
-public class FiveDayForecast implements Serializable {
+public class FiveDayForecast implements Serializable, Comparable<FiveDayForecast> {
     @SerializedName("thumbnail_url")
     private String thumbnailUrl;
+
+//    @SerializedName("url")
+//    private String url;
 
     private Double timeStamp;
 
@@ -20,9 +25,22 @@ public class FiveDayForecast implements Serializable {
         this.thumbnailUrl = null;
         this.timeStamp = null;
     }
+//    public FiveDayForecast(Double timestamp, String url, String thumbnailUrl) {
+////        Log.d("forecast", "this is thumbnail" + thumbnailUrl);
+////        Log.d("forecast", "this is url"+url);
+//        this.thumbnailUrl = thumbnailUrl;
+//        this.timeStamp = timestamp;
+//    }
+
     public FiveDayForecast(Double timestamp, String thumbnailUrl) {
+//        Log.d("forecast", "this is thumbnail" + thumbnailUrl);
+//        Log.d("forecast", "this is url"+url);
         this.thumbnailUrl = thumbnailUrl;
         this.timeStamp = timestamp;
+    }
+
+    public void setTimestamp(Double timestamp){
+        this.timeStamp=timestamp;
     }
 
 
@@ -36,7 +54,10 @@ public class FiveDayForecast implements Serializable {
 //    public void addUrl(){
 //
 //    }
-
+    @Override
+    public int compareTo(FiveDayForecast o){
+        return Double.compare(this.getTimeStamp(), o.getTimeStamp());
+    }
 
     public static class JsonDeserializer implements com.google.gson.JsonDeserializer<FiveDayForecast> {
         @Override
@@ -44,8 +65,8 @@ public class FiveDayForecast implements Serializable {
             JsonObject cityObj = json.getAsJsonObject();
 //            JsonObject coordObj = cityObj.getAsJsonObject("coord");
             return new FiveDayForecast(0.0,
-                    cityObj.getAsJsonPrimitive("thumbnail_url").getAsString()
-//                    coordObj.getAsJsonPrimitive("lat").getAsDouble(),
+                    cityObj.getAsJsonPrimitive("thumb_url").getAsString()
+//                    cityObj.getAsJsonPrimitive("thumb_url").getAsString()
 //                    coordObj.getAsJsonPrimitive("lon").getAsDouble(),
 //                    cityObj.getAsJsonPrimitive("timezone").getAsInt()
             );

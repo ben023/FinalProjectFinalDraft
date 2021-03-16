@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,8 +52,11 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
 
     public void updateForecastData(FiveDayForecast fiveDayForecast, String units) {
         if (this.fiveDayForecast!=null) {
+            fiveDayForecast.setTimestamp((double) System.currentTimeMillis());
             this.fiveDayForecast.add(fiveDayForecast);
             this.units = units;
+            //Note need to implement after click
+            Collections.sort(this.fiveDayForecast, Collections.reverseOrder());
             notifyDataSetChanged();
         }
     }

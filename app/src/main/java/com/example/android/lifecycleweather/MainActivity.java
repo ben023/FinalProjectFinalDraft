@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
             }
         });
 
-        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True");
+        forecastViewModel.loadForecastResults(OPENWEATHER_APPID, "True", "2020-10-10");
 
 //        this.fetchFiveDayForecast("Corvallis,OR,US", "imperial");
 
