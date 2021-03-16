@@ -24,12 +24,13 @@ public class ForecastRepository {
     private MutableLiveData<FiveDayForecast> forecastResults;
     private MutableLiveData<LoadingStatus> loadingStatus;
     private MutableLiveData<UrlFiveDayForecast> urlForecastResults;
+    private MutableLiveData<List<FiveDayForecast>> forecastList;
+
 
     private String currentDate;
     private String currentUnits;
 
     private static final String TAG = ForecastRepository.class.getSimpleName();
-
     private ForecastService forecastService;
     private UrlForecastService urlForecastService;
 
@@ -38,6 +39,9 @@ public class ForecastRepository {
 
     public ForecastRepository() {
         this.forecastResults = new MutableLiveData<>();
+        this.forecastList = new MutableLiveData<>();
+
+        this.forecastList.setValue(null);
         this.forecastResults.setValue(null);
         this.urlForecastResults = new MutableLiveData<>();
         this.urlForecastResults.setValue(null);
@@ -62,6 +66,12 @@ public class ForecastRepository {
 
         return this.forecastResults;
     }
+
+    public LiveData<List<FiveDayForecast>> getForecastList(){
+
+        return this.forecastList;
+    }
+
 
     public LiveData<LoadingStatus> getLoadingStatus() {
         return this.loadingStatus;
@@ -89,9 +99,10 @@ public class ForecastRepository {
 //                            forecastDataList.add(data_item);
 //                        }
 
-                        FiveDayForecast fiveDayForecast = new FiveDayForecast((double) System.currentTimeMillis(),null, response.body().getThumbnailUrl());
+                        FiveDayForecast fiveDayForecast = new FiveDayForecast((double) System.currentTimeMillis(),null, response.body().getThumbnailUrl(), response.body().getExplanation(), response.body().getTitle());
 //                        forecastResults.addUrl(response)
                         forecastResults.setValue(fiveDayForecast);
+
 //                    forecastResults.setValue(response.body().getForecastDataList());
 //                        forecastResults.setValue(fiveDayForecast);
                         loadingStatus.setValue(LoadingStatus.SUCCESS);
@@ -111,7 +122,7 @@ public class ForecastRepository {
                             if(response.code() == 200){
 //                                Log.d("forecast", String.valueOf(response.body()));
                                 String url = response.body().getUrl();
-                                FiveDayForecast fiveDayForecast = new FiveDayForecast((double) System.currentTimeMillis(), url, null);
+                                FiveDayForecast fiveDayForecast = new FiveDayForecast((double) System.currentTimeMillis(), url, null, response.body().getExplanation(), response.body().getTitle());
                                 forecastResults.setValue(fiveDayForecast);
 
                                 loadingStatus.setValue(LoadingStatus.SUCCESS);

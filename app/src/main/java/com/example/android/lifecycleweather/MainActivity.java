@@ -12,8 +12,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,6 +37,15 @@ import com.example.android.lifecycleweather.data.ForecastCity;
 import com.example.android.lifecycleweather.data.ForecastData;
 import com.example.android.lifecycleweather.data.LoadingStatus;
 import com.example.android.lifecycleweather.utils.OpenWeatherUtils;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements ForecastAdapter.OnForecastItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -62,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
     private ForecastAdapter forecastAdapter;
     private ForecastViewModel forecastViewModel;
     private SharedPreferences sharedPreferences;
-
+    private int test = 0;
     private RequestQueue requestQueue;
 
     private ForecastCity forecastCity;
@@ -77,6 +90,10 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
 
     private String savedUnits;
     private String savedQuery;
+    private URL imageUrl;
+    private Bitmap bitmap;
+    private String correctUrl;
+
 //    private String date = "2020-01-01";
 
     @Override
@@ -91,16 +108,16 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
         this.forecastListRV = findViewById(R.id.rv_forecast_list);
         this.forecastListRV.setLayoutManager(new LinearLayoutManager(this));
         this.forecastListRV.setHasFixedSize(true);
-
-        this.forecastAdapter = new ForecastAdapter(this);
-        this.forecastListRV.setAdapter(this.forecastAdapter);
-
+        if (test == 0) {
+            this.forecastAdapter = new ForecastAdapter(this);
+            this.forecastListRV.setAdapter(this.forecastAdapter);
+        }
         this.requestQueue = Volley.newRequestQueue(this);
 
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         this.sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 //        savedUnits = sharedPreferences.getString("pref_units", "Metric");
-        savedQuery = sharedPreferences.getString("pref_city", "today");
+        savedQuery = sharedPreferences.getString("pref_city", "2020-10-10");
 
         this.forecastViewModel = new ViewModelProvider(this)
                 .get(ForecastViewModel.class);
@@ -111,19 +128,76 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
                     public void onChanged(FiveDayForecast fiveDayForecast) {
                         if (fiveDayForecast != null) {
                             String units="F";
-//                            if (savedUnits.equals("Imperial")){
-//                                units = "F";
-//                            } else if (savedUnits.equals("Metric")){
-//                                units = "C";
-//                            } else {
-//                                units = "K";
-//                            }
-//                            forecastCity = fiveDayForecast.getForecastCity();
+
                             if(fiveDayForecast != null) {
                                 forecastAdapter.updateForecastData(fiveDayForecast, units);
+                                if (fiveDayForecast.getThumbnailUrl() != null) {
+//                                        imageUrl = new URL(fiveDayForecast.getThumbnailUrl());
+                                    Log.d(TAG, "debugging: " + fiveDayForecast.getThumbnailUrl());
+                                    } else{
+//                                        imageUrl = new URL(fiveDayForecast.getUrl());
+                                    Log.d(TAG, "debugging: " + fiveDayForecast.getUrl());
+                                    }
+//                                URL imageUrl = null;
+//                                String correctUrl;
+
+                                try {
+                                    if (fiveDayForecast.getThumbnailUrl() != null) {
+                                        imageUrl = new URL(fiveDayForecast.getThumbnailUrl());
+                                        correctUrl = fiveDayForecast.getThumbnailUrl();
+                                    } else {
+                                        imageUrl = new URL(fiveDayForecast.getUrl());
+                                        correctUrl = fiveDayForecast.getUrl();
+
+                                    }
+                                } catch(MalformedURLException ex){
+//
+                                }
+                                GetImageBitMap getImageBitMap = new GetImageBitMap();
+//                                Bitmap bitmap;
+//                                if (imageUrl != null) {
+//                                try{
+//                                   bitmap = BitmapFactory.decodeStream(imageUrl.openConnection().getInputStream());
+                                    getImageBitMap.execute(correctUrl);
+                                    bitmap = getImageBitMap.getBitmap();
+                                    Log.d(TAG, "bitmapURL  " + correctUrl);
+
+//                                } catch (IOException ioE){
+//
+//                                }
+                                FileOutputStream outStream = null;
+//
+//// Write to SD Card
+                                Log.d(TAG,"Debug2" + Environment.getExternalStorageState());
+
+                                try {
+                                    File sdCard = Environment.getExternalStorageDirectory();
+                                    File dir = new File(sdCard.getAbsolutePath() + "/camtest");
+                                    dir.mkdirs();
+
+                                    String fileName = String.format("%d.jpg", System.currentTimeMillis());
+                                    File outFile = new File(dir, fileName);
+
+                                    outStream = new FileOutputStream(outFile);
+                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                                    outStream.flush();
+                                    outStream.close();
+
+                                    Log.d(TAG, "onPictureTaken - wrote to " + outFile.getAbsolutePath());
+
+//                                    refreshGallery(outFile);
+
+                                } catch (FileNotFoundException e) {
+                                    Log.d(TAG,"FNF");
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                } finally {
+
+                                }
+                                test = 1;
                             }
                         }
-//                        forecastCity = forecast.getForecastCity();
                     }
                 });
         this.forecastViewModel.getLoadingStatus().observe(this, new Observer<LoadingStatus>() {
@@ -191,14 +265,33 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
 
     }
 
+//    public static Bitmap getBitmapFromURL(String src) {
+//        try {
+//            URL url = new URL(src);
+//            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//            connection.setDoInput(true);
+//            connection.connect();
+//            InputStream input = connection.getInputStream();
+//            GetImageBitMap getImageBitMap
+//            Bitmap myBitmap = getImageBitMap.
+//            return myBitmap;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
     @Override
     public void onForecastItemClick(FiveDayForecast fiveDayForecast) {
-//        Intent intent = new Intent(this, ForecastDetailActivity.class);
-//        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_DATA, forecastData);
-//        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_UNITS, this.savedUnits);
-//        intent.putExtra(ForecastDetailActivity.EXTRA_FORECAST_CITY, this.forecastCity);
-//        startActivity(intent);
-        Log.d(TAG, "clicked on tag");
+        Intent intent = new Intent(this, ForecastDetailActivity.class);
+        if (fiveDayForecast.getThumbnailUrl() == null) {
+            intent.putExtra(ForecastDetailActivity.EXTRA_URL, fiveDayForecast.getUrl());
+        } else {
+            intent.putExtra(ForecastDetailActivity.EXTRA_THUMB_URL, fiveDayForecast.getThumbnailUrl());
+        }
+        intent.putExtra(ForecastDetailActivity.EXTRA_EXPLANATION, fiveDayForecast.getExplanation());
+        intent.putExtra(ForecastDetailActivity.EXTRA_TITLE, fiveDayForecast.getTitle());
+        startActivity(intent);
+        Log.d(TAG, "clicked on tag, printing explanation and title from main: " + fiveDayForecast.getTitle() + " , " + fiveDayForecast.getExplanation());
     }
 
     @Override
@@ -314,6 +407,50 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
         Log.d(TAG, "onDestroy");
 
         super.onDestroy();
+    }
+
+
+    // How to get bitmap in another thread - https://stackoverflow.com/questions/37060782/cannot-convert-url-to-bitmap-in-android
+    class GetImageBitMap extends AsyncTask<String, Void, Bitmap> {
+
+        private Bitmap bitmap;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        public Bitmap doInBackground(String... urls) {
+            Bitmap map = null;
+            try {
+                URL url = new URL(urls[0]);
+                HttpURLConnection connection =(HttpURLConnection)url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                map= BitmapFactory.decodeStream(input);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            this.bitmap = map;
+
+            return map;
+        }
+
+        public Bitmap getBitmap(){
+            return this.bitmap;
+        }
+        protected void onPostExecute(Bitmap bMap) {
+            try {
+                if (!isCancelled()) {
+                    if (bMap != null) {
+                        //set your image view here.
+                    }
+                }
+            }catch (Exception exception){
+                exception.printStackTrace();
+            }
+        }
+
     }
 
     /**

@@ -16,6 +16,14 @@ public class FiveDayForecast implements Serializable, Comparable<FiveDayForecast
     @SerializedName("thumbnail_url")
     private String thumbnailUrl;
 
+
+    @SerializedName("explanation")
+    private String explanation;
+
+    @SerializedName("title")
+    private String title;
+
+
 //    @SerializedName("url")
     private String url;
 
@@ -32,18 +40,23 @@ public class FiveDayForecast implements Serializable, Comparable<FiveDayForecast
 //        this.timeStamp = timestamp;
 //    }
 
-    public FiveDayForecast(Double timestamp, String url, String thumbnailUrl) {
+    public FiveDayForecast(Double timestamp, String url, String thumbnailUrl, String explanation, String title) {
 //        Log.d("forecast", "this is thumbnail" + thumbnailUrl);
 //        Log.d("forecast", "this is url"+url);
         this.thumbnailUrl = thumbnailUrl;
         this.timeStamp = timestamp;
+        this.explanation = explanation;
+        this.title = title;
         this.url = url;
     }
 
     public void setTimestamp(Double timestamp){
         this.timeStamp=timestamp;
     }
-
+    public String getExplanation(){return this.explanation;}
+    public String getTitle() {
+        return this.title;
+    }
     public String getUrl(){return this.url;}
     public String getThumbnailUrl() {
         return this.thumbnailUrl;
@@ -66,7 +79,9 @@ public class FiveDayForecast implements Serializable, Comparable<FiveDayForecast
             JsonObject cityObj = json.getAsJsonObject();
 //            JsonObject coordObj = cityObj.getAsJsonObject("coord");
             return new FiveDayForecast(0.0,
-                    cityObj.getAsJsonPrimitive("thumb_url").getAsString(), null
+                    cityObj.getAsJsonPrimitive("thumb_url").getAsString(), null,
+                    cityObj.getAsJsonPrimitive("explanation").getAsString(),
+                    cityObj.getAsJsonPrimitive("title").getAsString()
 //                    cityObj.getAsJsonPrimitive("thumb_url").getAsString()
 //                    coordObj.getAsJsonPrimitive("lon").getAsDouble(),
 //                    cityObj.getAsJsonPrimitive("timezone").getAsInt()

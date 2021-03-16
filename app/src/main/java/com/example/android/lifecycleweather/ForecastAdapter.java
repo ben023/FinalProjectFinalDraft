@@ -53,6 +53,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
     public void updateForecastData(FiveDayForecast fiveDayForecast, String units) {
         if (this.fiveDayForecast!=null) {
             fiveDayForecast.setTimestamp((double) System.currentTimeMillis());
+            Log.d(TAG, "Five day forecast title and explanation: " + fiveDayForecast.getTitle() + ", " + fiveDayForecast.getExplanation());
             this.fiveDayForecast.add(fiveDayForecast);
             this.units = units;
             //Note need to implement after click

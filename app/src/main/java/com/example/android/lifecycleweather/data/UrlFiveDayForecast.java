@@ -12,15 +12,26 @@ public class UrlFiveDayForecast {
     @SerializedName("url")
     public String url;
 
-    public UrlFiveDayForecast(String url) {
+    @SerializedName("explanation")
+    private String explanation;
 
+    @SerializedName("title")
+    private String title;
+
+
+    public UrlFiveDayForecast(String url,  String explanation, String title) {
+        this.explanation = explanation;
+        this.title = title;
         this.url = url;
     }
 
     public String getUrl(){
         return url;
     }
-
+    public String getExplanation(){return this.explanation;}
+    public String getTitle() {
+        return this.title;
+    }
     public static class JsonDeserializer implements com.google.gson.JsonDeserializer<UrlFiveDayForecast> {
         @Override
         public UrlFiveDayForecast deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -28,7 +39,9 @@ public class UrlFiveDayForecast {
 //            JsonObject coordObj = cityObj.getAsJsonObject("coord");
             return new UrlFiveDayForecast(
 //                    cityObj.getAsJsonPrimitive("url").getAsString()
-                    cityObj.getAsJsonPrimitive("url").getAsString()
+                    cityObj.getAsJsonPrimitive("url").getAsString(),
+                    cityObj.getAsJsonPrimitive("explanation").getAsString(),
+                    cityObj.getAsJsonPrimitive("title").getAsString()
 //                    coordObj.getAsJsonPrimitive("lon").getAsDouble(),
 //                    cityObj.getAsJsonPrimitive("timezone").getAsInt()
             );

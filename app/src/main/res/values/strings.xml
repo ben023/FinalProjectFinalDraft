@@ -29,5 +29,5 @@
 
     <string name="geo_uri">geo:%1$f,%2$f?z=%3$d</string>
 
-    <string name="share_forecast_text">Weather forecast from %1$s for %2$s, %3$s: %4$s with a high of %5$s, a low of %6$s, and a %7$s chance of precipitation.</string>
+    <string name="share_forecast_text">Picture titled: %1$s. Found from: %2$s.</string>
 </resources>
