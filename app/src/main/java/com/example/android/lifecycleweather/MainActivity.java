@@ -140,61 +140,70 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.O
                                     }
 //                                URL imageUrl = null;
 //                                String correctUrl;
-
-                                try {
-                                    if (fiveDayForecast.getThumbnailUrl() != null) {
-                                        imageUrl = new URL(fiveDayForecast.getThumbnailUrl());
-                                        correctUrl = fiveDayForecast.getThumbnailUrl();
-                                    } else {
-                                        imageUrl = new URL(fiveDayForecast.getUrl());
-                                        correctUrl = fiveDayForecast.getUrl();
-
-                                    }
-                                } catch(MalformedURLException ex){
 //
-                                }
-                                GetImageBitMap getImageBitMap = new GetImageBitMap();
-//                                Bitmap bitmap;
-//                                if (imageUrl != null) {
-//                                try{
-//                                   bitmap = BitmapFactory.decodeStream(imageUrl.openConnection().getInputStream());
-                                    getImageBitMap.execute(correctUrl);
-                                    bitmap = getImageBitMap.getBitmap();
-                                    Log.d(TAG, "bitmapURL  " + correctUrl);
+//                                try {
+//                                    if (fiveDayForecast.getThumbnailUrl() != null) {
+//                                        imageUrl = new URL(fiveDayForecast.getThumbnailUrl());
+//                                        correctUrl = fiveDayForecast.getThumbnailUrl();
+//                                    } else {
+//                                        imageUrl = new URL(fiveDayForecast.getUrl());
+//                                        correctUrl = fiveDayForecast.getUrl();
+//
+//                                    }
+//                                } catch(MalformedURLException ex){
+////
+//                                }
+//                                GetImageBitMaptImageBitMap getImageBitMap = new GetImageBitMap();
+////                                Bitmap bitmap;
+////                                if (imageUrl != null) {
+////                                try{
+////                                   bitmap = BitmapFactory.decodeStream(imageUrl.openConnection().getInputStream());
+//                                    getImageBitMap.execute(correctUrl);
+//                                    bitmap = getImageBitMap.getBitmap();
+//
+//                                    Log.d(TAG, "bitmapURL  " + correctUrl);
 
 //                                } catch (IOException ioE){
 //
 //                                }
-                                FileOutputStream outStream = null;
+//                                FileOutputStream outStream = null;
+////
+////// Write to SD Card
+//                                Log.d(TAG,"Debug2" + Environment.getExternalStorageState());
 //
-//// Write to SD Card
-                                Log.d(TAG,"Debug2" + Environment.getExternalStorageState());
-
-                                try {
-                                    File sdCard = Environment.getExternalStorageDirectory();
-                                    File dir = new File(sdCard.getAbsolutePath() + "/camtest");
-                                    dir.mkdirs();
-
-                                    String fileName = String.format("%d.jpg", System.currentTimeMillis());
-                                    File outFile = new File(dir, fileName);
-
-                                    outStream = new FileOutputStream(outFile);
-                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-                                    outStream.flush();
-                                    outStream.close();
-
-                                    Log.d(TAG, "onPictureTaken - wrote to " + outFile.getAbsolutePath());
-
-//                                    refreshGallery(outFile);
-
-                                } catch (FileNotFoundException e) {
-                                    Log.d(TAG,"FNF");
-                                    e.printStackTrace();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                } finally {
-
-                                }
+//                                try {
+//                                    File sdCard = Environment.getExternalStorageDirectory();
+//                                    File dir = new File(sdCard.getAbsolutePath() + "/Download");
+//
+//                                    dir.mkdirs();
+//                                    Log.d(TAG, "Debug3");
+//                                    String fileName = String.format("%d.jpg", System.currentTimeMillis());
+//
+//                                    File outFile = new File(dir, fileName);
+////                                    outFile.createNewFile();
+////                                    outStream = new FileOutputStream(outFile, false);
+////                                    outFile.createNewFile();
+//                                    Log.d(TAG, "Debug4, filename: " + fileName);
+//
+//                                    outStream = new FileOutputStream(outFile);
+//                                    Log.d(TAG, "Debug5");
+//
+//                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+//                                    outStream.flush();
+//                                    outStream.close();
+//
+//                                    Log.d(TAG, "onPictureTaken - wrote to " + outFile.getAbsolutePath());
+//
+////                                    refreshGallery(outFile);
+//
+//                                } catch (FileNotFoundException e) {
+//                                    Log.d(TAG,"FNF");
+//                                    e.printStackTrace();
+//                                } catch (IOException e) {
+//                                    e.printStackTrace();
+//                                } finally {
+//
+//                                }
                                 test = 1;
                             }
                         }

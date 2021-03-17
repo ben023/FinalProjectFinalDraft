@@ -24,6 +24,7 @@ public class ForecastRepository {
     private MutableLiveData<FiveDayForecast> forecastResults;
     private MutableLiveData<LoadingStatus> loadingStatus;
     private MutableLiveData<UrlFiveDayForecast> urlForecastResults;
+//    private MutableLiveData<List<FiveDayForecast>> forecastList;
     private MutableLiveData<List<FiveDayForecast>> forecastList;
 
 
@@ -102,6 +103,7 @@ public class ForecastRepository {
                         FiveDayForecast fiveDayForecast = new FiveDayForecast((double) System.currentTimeMillis(),null, response.body().getThumbnailUrl(), response.body().getExplanation(), response.body().getTitle());
 //                        forecastResults.addUrl(response)
                         forecastResults.setValue(fiveDayForecast);
+//                        forecastList.add(forecastResults);
 
 //                    forecastResults.setValue(response.body().getForecastDataList());
 //                        forecastResults.setValue(fiveDayForecast);
